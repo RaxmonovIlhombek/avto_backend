@@ -63,6 +63,11 @@ class ParkingSpaceSerializer(serializers.ModelSerializer):
             }
         return None
 
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'
+
 class BookingSerializer(serializers.ModelSerializer):
     user_detail = UserSerializer(source='user', read_only=True)
     space_detail = ParkingSpaceSerializer(source='space', read_only=True)
@@ -77,10 +82,6 @@ class BookingSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['qr_token']
 
-class PaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = '__all__'
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
