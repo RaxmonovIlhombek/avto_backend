@@ -66,13 +66,14 @@ class ParkingSpaceSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     user_detail = UserSerializer(source='user', read_only=True)
     space_detail = ParkingSpaceSerializer(source='space', read_only=True)
+    payment = PaymentSerializer(read_only=True)
     
     class Meta:
         model = Booking
         fields = [
             'id', 'user', 'space', 'start_time', 'end_time', 
             'status', 'created_at', 'user_detail', 'space_detail',
-            'car_number', 'phone_number', 'qr_token'
+            'car_number', 'phone_number', 'qr_token', 'payment'
         ]
         read_only_fields = ['qr_token']
 
