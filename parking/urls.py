@@ -9,8 +9,8 @@ from .views_admin import (
 from .views_notifications import NotificationListView, NotificationMarkReadView, NotificationMarkAllReadView
 
 router = DefaultRouter()
-router.register(r'lots', ParkingLotViewSet)
-router.register(r'spaces', ParkingSpaceViewSet)
+router.register(r'lots', ParkingLotViewSet, basename='lots')
+router.register(r'spaces', ParkingSpaceViewSet, basename='spaces')
 router.register(r'bookings', BookingViewSet, basename='bookings')
 router.register(r'payments', PaymentViewSet, basename='payments')
 
