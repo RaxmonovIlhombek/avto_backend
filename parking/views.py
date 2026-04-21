@@ -35,15 +35,40 @@ class ParkingLotViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
 
 class ParkingSpaceViewSet(viewsets.ModelViewSet):
-    queryset = ParkingSpace.objects.all()
     serializer_class = ParkingSpaceSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        from django.utils import timezone
+        now = timezone.now()
+        # Find active bookings that have expired
+        expired_bookings = Booking.objects.filter(status='active', end_time__lte=now)
+        for booking in expired_bookings:
+            booking.status = 'completed'
+            booking.save(update_fields=['status'])
+            # Reset space status to available
+            space = booking.space
+            space.status = 'available'
+            space.save(update_fields=['status'])
+            
+        return ParkingSpace.objects.all()
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        from django.utils import timezone
+        now = timezone.now()
+        # Auto-expire
+        expired_bookings = Booking.objects.filter(status='active', end_time__lte=now)
+        for booking in expired_bookings:
+            booking.status = 'completed'
+            booking.save(update_fields=['status'])
+            space = booking.space
+            space.status = 'available'
+            space.save(update_fields=['status'])
+
         user = self.request.user
         if user.is_staff or user.is_superuser:
             return Booking.objects.all().order_by('-created_at')

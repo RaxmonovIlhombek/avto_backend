@@ -42,10 +42,26 @@ class ParkingLotSerializer(serializers.ModelSerializer):
 
 class ParkingSpaceSerializer(serializers.ModelSerializer):
     parking_lot_detail = ParkingLotSerializer(source='parking_lot', read_only=True)
+    current_booking_detail = serializers.SerializerMethodField()
     
     class Meta:
         model = ParkingSpace
         fields = '__all__'
+
+    def get_current_booking_detail(self, obj):
+        active_booking = obj.bookings.filter(status='active').first()
+        if active_booking:
+            user = active_booking.user
+            profile = getattr(user, 'profile', None)
+            return {
+                'id': active_booking.id,
+                'user_name': f"{user.first_name} {user.last_name}".strip() or user.username if user else 'N/A',
+                'car_number': active_booking.car_number or getattr(profile, 'car_number', 'N/A'),
+                'phone_number': active_booking.phone_number or getattr(profile, 'phone_number', 'N/A'),
+                'start_time': active_booking.start_time.isoformat() if active_booking.start_time else None,
+                'end_time': active_booking.end_time.isoformat() if active_booking.end_time else None
+            }
+        return None
 
 class BookingSerializer(serializers.ModelSerializer):
     user_detail = UserSerializer(source='user', read_only=True)
