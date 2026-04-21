@@ -53,6 +53,25 @@ class ParkingSpaceViewSet(viewsets.ModelViewSet):
             
         return ParkingSpace.objects.all()
 
+    from rest_framework.decorators import action
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def bulk_delete(self, request):
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({'error': 'No IDs provided'}, status=400)
+        
+        # Security: Don't delete spaces with active bookings
+        active_spaces = ParkingSpace.objects.filter(id__in=ids, bookings__status='active').distinct()
+        if active_spaces.exists():
+            active_ids = list(active_spaces.values_list('identifier', flat=True))
+            return Response({
+                'error': f"Cannot delete spaces with active bookings: {', '.join(active_ids)}",
+                'active_identifiers': active_ids
+            }, status=400)
+
+        count, _ = ParkingSpace.objects.filter(id__in=ids).delete()
+        return Response({'message': f'Successfully deleted {count} spaces'}, status=200)
+
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
